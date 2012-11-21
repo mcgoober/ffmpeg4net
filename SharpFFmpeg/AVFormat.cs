@@ -715,24 +715,24 @@ namespace SharpFFmpeg
         [StructLayout(LayoutKind.Sequential)]
         public struct AVFormatParameters
         {
-            AVRational time_base;
-            int sample_rate;
-            int channels;
-            int width;
-            int height;
-            PixelFormat pix_fmt;
-            IntPtr image_format; // AVImageFormat
-            int channel;
+            public AVRational time_base;
+            public int sample_rate;
+            public int channels;
+            public int width;
+            public int height;
+            public PixelFormat pix_fmt;
+            public IntPtr image_format; // AVImageFormat
+            public int channel;
             [MarshalAs(UnmanagedType.LPStr)]
-            String device;
+            public String device;
             [MarshalAs(UnmanagedType.LPStr)]
-            String standard;
-            int mpeg2ts_raw;
-            int mpeg2ts_compute_pcr;
-            int initial_pause;
-            int prealloced_context;
-            CodecID video_codec_id;
-            CodecID audio_codec_id;
+            public String standard;
+            public int mpeg2ts_raw;
+            public int mpeg2ts_compute_pcr;
+            public int initial_pause;
+            public int prealloced_context;
+            public CodecID video_codec_id;
+            public CodecID audio_codec_id;
         };
 
         public delegate int WriteHeader(IntPtr pAVFormatContext);
@@ -804,7 +804,7 @@ namespace SharpFFmpeg
             public String long_name;
 
             public int priv_data_size;
-
+          
             [MarshalAs(UnmanagedType.FunctionPtr)]
             public ReadProbeCallback read_probe;
 
@@ -838,6 +838,7 @@ namespace SharpFFmpeg
             public ReadPauseCallback read_pause;
 
             public IntPtr nextAVInputFormat;
+           
         };
 
         [StructLayout(LayoutKind.Sequential)]
@@ -940,17 +941,17 @@ namespace SharpFFmpeg
         public struct AVFormatContext
         {
             public IntPtr pAVClass; // set by av_alloc_format_context
+          
+            public IntPtr iformat; // can only be iformat or oformat, not both at the same time 
 
-            public IntPtr pAVInputFormat; // can only be iformat or oformat, not both at the same time 
-
-            public IntPtr pAVOutputFormat;
+            public IntPtr oformat;
 
             //[MarshalAs(UnmanagedType.FunctionPtr)]
             //AnonymousCallback priv_data;
-
+          
             public IntPtr priv_data;
 
-            public ByteIOContext pb;
+            public IntPtr pb;
 
             [MarshalAs(UnmanagedType.I4)]
             public int nb_streams;
@@ -960,8 +961,8 @@ namespace SharpFFmpeg
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 1024)]
             public byte[] filename; // input or output filename
-
-            /* stream info */
+          
+            // stream info 
             [MarshalAs(UnmanagedType.I8)]
             public Int64 timestamp;
 
@@ -992,20 +993,20 @@ namespace SharpFFmpeg
             [MarshalAs(UnmanagedType.I4)]
             public int ctx_flags; // format specific flags, see AVFMTCTX_xx
 
-            /* This buffer is only needed when packets were already buffered but
-               not decoded, for example to get the codec parameters in mpeg
-               streams */
+            // This buffer is only needed when packets were already buffered but
+            // not decoded, for example to get the codec parameters in mpeg
+            // streams 
 
             public IntPtr packet_buffer; // AVPacketList
-            /* decoding: position of the first frame of the component, in
-               AV_TIME_BASE fractional seconds. NEVER set this value directly:
-               it is deduced from the AVStream values.  */
+            // decoding: position of the first frame of the component, in
+            // AV_TIME_BASE fractional seconds. NEVER set this value directly:
+            // it is deduced from the AVStream values.  
 
             [MarshalAs(UnmanagedType.I8)]
             public Int64 start_time;
-            /* decoding: duration of the stream, in AV_TIME_BASE fractional
-               seconds. NEVER set this value directly: it is deduced from the
-               AVStream values.  */
+            // decoding: duration of the stream, in AV_TIME_BASE fractional
+            // seconds. NEVER set this value directly: it is deduced from the
+            // AVStream values.  
 
             [MarshalAs(UnmanagedType.I8)]
             public Int64 duration;
@@ -1013,13 +1014,13 @@ namespace SharpFFmpeg
             [MarshalAs(UnmanagedType.I8)]
             public Int64 file_size; // decoding: total file size. 0 if unknown 
 
-            /* decoding: total stream bitrate in bit/s, 0 if not
-               available. Never set it directly if the file_size and the
-               duration are known as ffmpeg can compute it automatically. */
+            // decoding: total stream bitrate in bit/s, 0 if not
+            //   available. Never set it directly if the file_size and the
+            //   duration are known as ffmpeg can compute it automatically. 
             [MarshalAs(UnmanagedType.I4)]
             public int bit_rate;
 
-            /* av_read_frame() support */
+            // av_read_frame() support 
             public IntPtr cur_st; // AVStream
 
             public IntPtr cur_ptr; // uint8_t
@@ -1029,7 +1030,7 @@ namespace SharpFFmpeg
 
             public AVPacket cur_pkt; // AVPacket
 
-            /* av_seek_frame() support */
+            // av_seek_frame() support 
             [MarshalAs(UnmanagedType.I8)]
             public Int64 data_offset; // offset of the first packet
 
@@ -1058,7 +1059,7 @@ namespace SharpFFmpeg
             public int loop_input;
 
             [MarshalAs(UnmanagedType.U4)]
-            public uint probesize; // decoding: size of data to probe; encoding unused
+            public uint probesize; // decoding: size of data to probe; encoding unused */
         };
 
         [StructLayout(LayoutKind.Sequential)]

@@ -15,7 +15,7 @@ namespace test
       FFmpeg.avcodec_register_all();
       FFmpeg.avdevice_register_all();
       FFmpeg.av_register_all();
-
+      
       IntPtr avformat_optsPtr = FFmpeg.av_alloc_format_context();
 
       ShowVersion("avcodec", FFmpeg.avcodec_version());
@@ -23,9 +23,116 @@ namespace test
       ShowVersion("avformat", FFmpeg.avformat_version());
       ShowVersion("avutil", FFmpeg.avutil_version());
       
-      ShowFormats();
+      //ShowFormats();
+
+      InputFile("test.mp4");
 
       Console.Read();
+    }
+
+    static void InputFile(string filename)
+    {
+      var avformatcontextPtr = FFmpeg.av_alloc_format_context();
+      var avformatparameters = new FFmpeg.AVFormatParameters()
+        {
+          prealloced_context = 1,
+          sample_rate = 0,
+          channels = 0,
+          width = 0,
+          height = 0,
+          pix_fmt = 0,
+          channel = 0,
+          standard = string.Empty,
+          video_codec_id = 0
+        };
+
+      var avformatparametersPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(FFmpeg.AVFormatParameters)));
+      Marshal.StructureToPtr(avformatparameters, avformatparametersPtr, false);
+      var err = FFmpeg.av_open_input_file(out avformatcontextPtr, filename, IntPtr.Zero, 0, avformatparametersPtr);
+
+      if (err < 0)
+      {
+        Console.WriteLine(string.Format("Error: {0}", err));
+        return;
+      }
+
+      var ret = FFmpeg.av_find_stream_info(avformatcontextPtr);
+
+      if (ret < 0)
+      {
+        Console.WriteLine("could not find codec parameters");
+      }
+
+      DumpFormat(avformatcontextPtr, 0, filename, false);
+
+      //FFmpeg.dump_format(avformatcontextPtr, 0, filename, 0);
+
+      FFmpeg.av_freep(avformatcontextPtr);
+      Marshal.FreeHGlobal(avformatparametersPtr);
+    }
+
+    static void DumpFormat(IntPtr avformatcontextPtr, int index, string filename, bool isOutput)
+    {
+      var ic = (FFmpeg.AVFormatContext)Marshal.PtrToStructure(avformatcontextPtr, typeof(FFmpeg.AVFormatContext));
+      var format = Marshal.PtrToStructure(
+        isOutput ? ic.oformat : ic.iformat, isOutput ? typeof(FFmpeg.AVOutputFormat) : typeof(FFmpeg.AVInputFormat));
+      Console.WriteLine(string.Format("{0} #{1}, {2}, {3} '{4}':",
+        isOutput ? "Output" : "Input",
+        index,
+        isOutput ? ((FFmpeg.AVOutputFormat)format).name : ((FFmpeg.AVInputFormat)format).name,
+        isOutput ? "to" : "from",
+        filename));
+
+      if (!isOutput)
+      {
+        Console.Write("  Duration: ");
+        if (ic.duration != -1)
+        {
+          int hours, mins, secs, us;
+          secs = (int)(ic.duration / FFmpeg.AV_TIME_BASE);
+          us = (int)(ic.duration % FFmpeg.AV_TIME_BASE);
+          mins = secs / 60;
+          secs %= 60;
+          hours = mins / 60;
+          mins %= 60;
+          Console.Write(string.Format("{0:00}:{1:00}:{2:00}.{3:00}", hours, mins, secs, (100 * us) / FFmpeg.AV_TIME_BASE));
+        }
+        else
+        {
+          Console.Write("N/A");
+        }
+        if (ic.start_time != -1)
+        {
+          long secs, us;
+          Console.Write(", start: ");
+          secs = ic.start_time / FFmpeg.AV_TIME_BASE;
+          us = ic.start_time % FFmpeg.AV_TIME_BASE;
+          Console.Write("{0}.{1:000000}", secs, FFmpeg.av_rescale(us, 1000000, FFmpeg.AV_TIME_BASE));
+        }
+        Console.Write(", bitrate: ");
+        if (ic.bit_rate != 0)
+        {
+          Console.Write("{0} kb/s", ic.bit_rate / 1000);
+        }
+        else
+        {
+          Console.Write("N/A");
+        }
+        Console.WriteLine();
+        for (int i = 0; i < ic.nb_streams; i++)
+        {
+          DumpStreamFormat(ic, i, index, isOutput);
+        }
+      }
+    }
+
+    static void DumpStreamFormat(FFmpeg.AVFormatContext ic, object format, int i, int index, bool isOutput)
+    {
+      var flags = isOutput ? ((FFmpeg.AVOutputFormat)format).flags : ((FFmpeg.AVInputFormat)format).flags;
+      var st = (FFmpeg.AVStream)Marshal.PtrToStructure(ic.streams[i], typeof(FFmpeg.AVStream));
+      int g = (int)FFmpeg.ff_gcd(st.time_base.num, st.time_base.den);
+
+      FFmpeg.avcodec_string();
     }
 
     static void ShowBanner()
@@ -35,7 +142,11 @@ namespace test
 
     static void ShowVersion(string libName, uint version)
     {
-      Console.WriteLine("lib{0,-9}{1,10}.{2,2}.{3,2}", libName, version >> 16, version >> 8 & 0xff, version & 0xff);
+      Console.WriteLine("lib{0,-9}{1,10}.{2,2}.{3,2}", 
+        libName, 
+        version >> 16, 
+        version >> 8 & 0xff, 
+        version & 0xff);
     }
 
     static void ShowFormats()

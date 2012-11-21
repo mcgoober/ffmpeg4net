@@ -143,5 +143,14 @@ namespace SharpFFmpeg
             [MarshalAs(UnmanagedType.I4)]
             public int den;
         };
+
+        [DllImport(AVUTILS_DLL_NAME), SuppressUnmanagedCodeSecurity]
+        public static extern void av_log_set_level(int level);
+
+        [DllImport(AVUTILS_DLL_NAME), SuppressUnmanagedCodeSecurity]
+        public static extern Int64 av_rescale(Int64 a, Int64 b, Int64 c);
+
+        [DllImport(AVUTILS_DLL_NAME), SuppressUnmanagedCodeSecurity]
+        public static extern Int64 ff_gcd(Int64 a, Int64 b);
     }
 }
