@@ -2,6 +2,7 @@ using System;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Text;
 
 namespace SharpFFmpeg
 {
@@ -360,7 +361,7 @@ namespace SharpFFmpeg
         /// <param name="encode"></param>
         [DllImport(AVCODEC_DLL_NAME), SuppressUnmanagedCodeSecurity]
         public static extern void avcodec_string(
-                    [MarshalAs(UnmanagedType.LPStr)]String mam, int buf_size,
+                    StringBuilder mam, int buf_size,
                     IntPtr pAVCodeContext, int encode);
 
         /// <summary>
@@ -756,7 +757,7 @@ namespace SharpFFmpeg
         /// 
         /// </summary>
         /// <param name="ptr"></param>
-        [DllImport(AVCODEC_DLL_NAME), SuppressUnmanagedCodeSecurity]
+        [DllImport(AVUTILS_DLL_NAME), SuppressUnmanagedCodeSecurity]
         public static extern void av_freep(IntPtr ptr);
 
         /// <summary>
@@ -1710,10 +1711,6 @@ namespace SharpFFmpeg
 
             public IntPtr priv_data;
 
-            /* unused, FIXME remove*/
-            [MarshalAs(UnmanagedType.I4)]
-            public int rtp_mode;
-
             /* The size of the RTP payload: the coder will  */
             /* do it's best to deliver a chunk with size    */
             /* below rtp_payload_size, the chunk will start */
@@ -1772,8 +1769,8 @@ namespace SharpFFmpeg
              */
             public IntPtr opaque;
 
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public byte[] codec_name;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string codec_name;
 
             public CodecType codec_type; /* see CODEC_TYPE_xxx */
 
@@ -1916,7 +1913,7 @@ namespace SharpFFmpeg
             public float rc_qsquish;
 
             [MarshalAs(UnmanagedType.R4)]
-            float rc_qmod_amp;
+            public float rc_qmod_amp;
 
             [MarshalAs(UnmanagedType.I4)]
             public int rc_qmod_freq;
@@ -2039,10 +2036,6 @@ namespace SharpFFmpeg
              */
             [MarshalAs(UnmanagedType.R4)]
             public float dark_masking;
-
-            /* for binary compatibility */
-            [MarshalAs(UnmanagedType.I4)]
-            public int unused;
 
             /**
              * idct algorithm, see FF_IDCT_* below.
@@ -2671,14 +2664,14 @@ namespace SharpFFmpeg
              * - encoding: unused
              * - decoding: set by user.
              */
-            AVDiscard skip_loop_filter;
+            public AVDiscard skip_loop_filter;
 
             /**
              *
              * - encoding: unused
              * - decoding: set by user.
              */
-            AVDiscard skip_frame;
+            public AVDiscard skip_frame;
 
             /**
              *
@@ -2701,8 +2694,8 @@ namespace SharpFFmpeg
              * - encoding: set by user.
              * - decoding: unused
              */
-            [MarshalAs(UnmanagedType.I4)]
-            public int crf;
+            
+            public float crf;
 
 
             /**

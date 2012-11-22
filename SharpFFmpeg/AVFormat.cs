@@ -872,10 +872,7 @@ namespace SharpFFmpeg
             public IntPtr priv_data;
 
             [MarshalAs(UnmanagedType.I8)]
-            public Int64 codec_info_duration; // internal data used in av_find_stream_info()
-
-            [MarshalAs(UnmanagedType.I4)]
-            public int codec_info_nb_frames;
+            public Int64 first_dts; // internal data used in av_find_stream_info()
 
             public AVFrac pts; // encoding: PTS generation when outputing stream 
 
@@ -904,9 +901,9 @@ namespace SharpFFmpeg
             // decoding: duration of the stream, in AV_TIME_BASE fractional seconds. 
             [MarshalAs(UnmanagedType.I8)]
             public Int64 duration;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public byte[] language; // ISO 639 3-letter language code (empty string if undefined)
+            
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 4)]
+            public string language; // ISO 639 3-letter language code (empty string if undefined)
 
             [MarshalAs(UnmanagedType.I4)]
             public int need_parsing;

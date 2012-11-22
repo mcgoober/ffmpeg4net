@@ -18,14 +18,10 @@ namespace test
       
       IntPtr avformat_optsPtr = FFmpeg.av_alloc_format_context();
 
-      ShowVersion("avcodec", FFmpeg.avcodec_version());
-      ShowVersion("avdevice", FFmpeg.avdevice_version());
-      ShowVersion("avformat", FFmpeg.avformat_version());
-      ShowVersion("avutil", FFmpeg.avutil_version());
-      
-      //ShowFormats();
+      ShowBanner();
 
-      InputFile("test.mp4");
+      //ShowFormats();
+      InputFile("test.ogg");
 
       Console.Read();
     }
@@ -65,10 +61,8 @@ namespace test
 
       DumpFormat(avformatcontextPtr, 0, filename, false);
 
-      //FFmpeg.dump_format(avformatcontextPtr, 0, filename, 0);
-
-      FFmpeg.av_freep(avformatcontextPtr);
       Marshal.FreeHGlobal(avformatparametersPtr);
+      FFmpeg.av_freep(avformatcontextPtr);
     }
 
     static void DumpFormat(IntPtr avformatcontextPtr, int index, string filename, bool isOutput)
@@ -121,23 +115,53 @@ namespace test
         Console.WriteLine();
         for (int i = 0; i < ic.nb_streams; i++)
         {
-          DumpStreamFormat(ic, i, index, isOutput);
+          DumpStreamFormat(avformatcontextPtr, ic, format, i, index, isOutput);
         }
       }
     }
 
-    static void DumpStreamFormat(FFmpeg.AVFormatContext ic, object format, int i, int index, bool isOutput)
+    static void DumpStreamFormat(IntPtr icPtr, FFmpeg.AVFormatContext ic, object format, int i, int index, bool isOutput)
     {
       var flags = isOutput ? ((FFmpeg.AVOutputFormat)format).flags : ((FFmpeg.AVInputFormat)format).flags;
       var st = (FFmpeg.AVStream)Marshal.PtrToStructure(ic.streams[i], typeof(FFmpeg.AVStream));
       int g = (int)FFmpeg.ff_gcd(st.time_base.num, st.time_base.den);
 
-      FFmpeg.avcodec_string();
+      var buf = new StringBuilder(256);
+
+      FFmpeg.avcodec_string(buf, buf.Capacity, st.codec, isOutput ? 1 : 0);
+      Console.Write("    Stream #{0}.{1}", index, i);
+      if ((flags & FFmpeg.AVFMT_SHOW_IDS) != 0)
+      {
+        Console.Write("[0x{0:x}]", st.id);
+      }
+      if (st.language.Length > 0)
+      {
+        Console.Write("({0})", st.language);
+      }
+      Console.Write(", {0}/{1}", st.time_base.num / g, st.time_base.den / g);
+      Console.Write(": {0}", buf);
+      var codec = (FFmpeg.AVCodecContext)Marshal.PtrToStructure(st.codec, typeof(FFmpeg.AVCodecContext));
+      if (codec.codec_type == FFmpeg.CodecType.CODEC_TYPE_VIDEO)
+      {
+        if (st.r_frame_rate.den != 0 && st.r_frame_rate.num != 0)
+        {
+          Console.Write(", {0:f} tb(r)", FFmpeg.av_q2d(st.r_frame_rate));
+        }
+        else
+        {
+          Console.Write(", {0:f} tb(c)", 1 / FFmpeg.av_q2d(codec.time_base));
+        }
+      }
+      Console.WriteLine();
     }
 
     static void ShowBanner()
     {
-      Console.WriteLine("");
+      Console.WriteLine("FFmpeg with SharpFFmpeg");
+      ShowVersion("avutil", FFmpeg.avutil_version());
+      ShowVersion("avcodec", FFmpeg.avcodec_version());
+      ShowVersion("avformat", FFmpeg.avformat_version());
+      ShowVersion("avdevice", FFmpeg.avdevice_version());      
     }
 
     static void ShowVersion(string libName, uint version)

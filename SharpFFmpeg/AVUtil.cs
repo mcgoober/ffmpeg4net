@@ -152,5 +152,11 @@ namespace SharpFFmpeg
 
         [DllImport(AVUTILS_DLL_NAME), SuppressUnmanagedCodeSecurity]
         public static extern Int64 ff_gcd(Int64 a, Int64 b);
+
+        public static double av_q2d(AVRational a)
+        {
+          return a.num / (double)a.den;
+        }
+
     }
 }
